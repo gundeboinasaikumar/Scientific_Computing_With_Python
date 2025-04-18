@@ -1,0 +1,100 @@
+
+class Category:
+    def __init__(self,category):
+        self.name = category
+        self.ledger=[]
+    def deposit(self, amount, description=""):
+        self.ledger.append({'amount': float(amount),'description': description })
+        
+
+    def withdraw(self, amount, description=""):
+        if self.check_funds(amount):
+            #self.ledgers.append(Ledger(amount, description))
+            self.ledger.append({
+                'amount': float(-amount),
+                'description': description
+            })
+            return True
+        return False
+    def transfer(self, amount, category):
+        if self.check_funds(amount):
+            self.withdraw(amount, f"Transfer to {category.name}")
+            category.deposit(amount,f"Transfer from {self.name}")
+            return True
+
+        return False
+
+    def get_balance(self):
+        return sum(item['amount'] for item in self.ledger)
+        #return self._balance
+    def check_funds(self,amount):
+        return self.get_balance()>= amount
+    
+    def __str__(self):
+        title = f"{self.name:*^30}\n"
+        items = ""
+        for entry in self.ledger:
+            desc = entry["description"][:23].ljust(23)
+            amt = f"{entry['amount']:.2f}".rjust(7)
+            items += f"{desc}{amt}\n"
+        total = f"Total: {self.get_balance():.2f}"
+        return title + items + total
+        
+class Ledger:
+    def __init__(self, amount, description):
+        self.amount = amount
+        self.description = description
+
+    def __str__(self):
+        return f"{self.amount} - {self.description}"
+
+def create_spend_chart(categories):
+    spends = []
+    for category in categories:
+        total = 0
+        for item in category.ledger:
+            if item['amount'] < 0:
+                total += -item['amount']
+        spends.append(total)
+
+    total_spent = sum(spends)
+
+    percentages = [int((spend / total_spent) * 100) // 10 * 10 for spend in spends]
+
+    chart = "Percentage spent by category\n"
+
+    for i in range(100, -1, -10):
+        chart += str(i).rjust(3) + "|"
+        for percent in percentages:
+            chart += " o " if percent >= i else "   "
+        chart += " \n"  
+    chart += "    " + "-" * (len(categories) * 3 + 1) + "\n"
+
+    max_length = max(len(category.name) for category in categories)
+    names = [category.name.ljust(max_length) for category in categories]
+
+    for i in range(max_length):
+        chart += "     "
+        for name in names:
+            chart += name[i] + "  "
+        chart += "\n"
+
+    return chart.rstrip("\n")
+
+    
+
+food = Category("Food")
+clothing = Category("Clothing")
+auto = Category("Auto")
+
+food.deposit(1000)
+food.withdraw(300.50)
+clothing.deposit(500)
+clothing.withdraw(150)
+auto.deposit(800)
+auto.withdraw(450)
+
+print(food)
+print(clothing)
+print(auto)
+print(create_spend_chart([food,clothing,auto]))
